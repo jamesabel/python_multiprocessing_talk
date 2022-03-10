@@ -56,22 +56,17 @@ class GetDirInfo(Process):
         self.result.put(dir_info)  # return the value in the Queue
 
 
-def main():
+def main_process(balsa: Balsa):
 
-    balsa = Balsa(
-        application_name,
-        author,
-        log_directory="log",
-        delete_existing_log_files=True,
-        verbose=True,
-    )
-    balsa.init_logger()
+    print("=== main_process ===")
+    start = time.time()
+
     balsa_config = balsa.config_as_dict()
 
+    # create and start worker processes
     log.info(f"starting {application_name}")
     e_process = CalculateE(balsa_config)  # pass in log config
     e_process.start()  # calculates e
-
     program_files = Path(Path(".").absolute().anchor, "Program Files")
     dir_info_process = GetDirInfo(Path(program_files, "Python310"), balsa_config)
     dir_info_process.start()
@@ -82,13 +77,18 @@ def main():
         print(count_down)
         time.sleep(1)
 
-    e_process.exit_event.set()  # request exit
+    # request exit from "e" process and wait for dir info
+    e_process.exit_event.set()
     e_process.join()
+    while dir_info_process.is_alive():
+        print(f"waiting on {dir_info_process.name} {time.time() - start} ...")
+        dir_info_process.join(1)
+
+    # get the results
     e = e_process.result.get(timeout=1)  # only works once
     print(f"{e=}")
-
-    while dir_info_process.is_alive():
-        print(f"waiting on {dir_info_process.name} ...")
-        dir_info_process.join(3)
     dir_info = dir_info_process.result.get()
     print(f"{dir_info=}")
+    print(f"total time: {time.time() - start} seconds")
+
+    print()
