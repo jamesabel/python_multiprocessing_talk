@@ -1,20 +1,27 @@
-from multiprocessing import Event
+from multiprocessing import Event, current_process
 import math
 
-from balsa import get_logger
+from balsa import get_logger, balsa_clone
 
 from multiprocessing_talk import application_name
 
 log = get_logger(application_name)
 
 
-def calculate_e(exit_event: Event) -> float:
+def calculate_e(exit_event: Event, balsa_config: dict = None) -> float:
     """
     calculate "e"
 
     :param exit_event: Event that controls when to exit
+    :param balsa_config: balsa config dict
     :return: the value of e
     """
+
+    if balsa_config is not None:
+        # we're called from process.Pool() so we have to do things that are otherwise in .run()
+        balsa = balsa_clone(balsa_config, "e_process")
+        balsa.init_logger()
+        current_process().name = 'e_process'
 
     k = 1.0
     e_value = 0.0
