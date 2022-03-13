@@ -173,6 +173,8 @@ class CalculateE(Process):
   - communicate using `ctypes` or `pickle`-able data
 - logging implementation that doesn't take multiprocessing into account
 - mismanaging compute resources (cores)
+  - mapping a program on to multiple processes that isn't actually parallelizable
+  - too much start/stop or communication overhead
 - usually best to parallelize across "real" cores
   - parallelize across "HyperThread" (AKA Simultaneous Multi-Threading or SMT) processors with care 
 
@@ -184,6 +186,7 @@ class CalculateE(Process):
 - consider first prototyping a design pattern appropriate for your application
 
 # Summary
+- Parallel processing has historically been considered difficult, but it doesn't have to be
 - Using `multiprocessing.Process` can be straightforward
 - Choosing the most appropriate design pattern is important
 - Understand limitations of multiprocessing
