@@ -3,7 +3,7 @@
 # Why Use Multiprocessing
 
 - almost all computers these days have at least 2 cores and many have 4, 6, 8, or more
-- program responsiveness (improve latency)
+- improve program responsiveness (improve latency)
 - improve performance by executing across multiple processor cores (improve throughput)
 - utilize non-saturated computing resources
 - examples:
