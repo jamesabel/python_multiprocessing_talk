@@ -5,9 +5,10 @@
 - almost all computers these days have at least 2 cores and many have 4, 6, 8, or more
 - program responsiveness (improve latency)
 - improve performance by executing across multiple processor cores (improve throughput)
+- utilize non-saturated computing resources
 - examples:
-  - one processor core handles UI while the others handle compute
-    - does not require managing threads as in cooperative multi-threading
+  - one processor core handles UI while others handle compute
+    - does not require managing thread execution time as in cooperative multi-threading
     - GIL not a factor for multiprocessing
   - spread compute across multiple cores
 
@@ -21,8 +22,8 @@
 - selecting the most appropriate pattern can be rather daunting
 - good news: a relatively small number of design patterns can handle many common cases
 
-This talk will mainly discuss `multiprocessing.Process` using OOP and `multiprocessing.Pool` with a 
-function based pattern.
+This talk will mainly discuss `multiprocessing.Process` using object oriented progreamming (OOP) and 
+`multiprocessing.Pool` with a function based pattern.
 
 ## Using `multiprocessing.Process`
 
@@ -32,28 +33,31 @@ function based pattern.
   - `.start()` is called to start the process
   - `.run()` is the method that actually runs in the separate process
 - can also be run procedurally via `Process(target=<function>)` *(not a focus in these examples)*
-- return values via communication capabilities provided in the `multiprocessing` module
+- return values via communication provided in the `multiprocessing` module
   - e.g. `Queue`, `Value`, etc.
 
 ### Code Snippet
+
+Create some work to do:
 ```python
 from multiprocessing import Event
 
 def calculate_e(exit_event: Event) -> float:
     """
-    calculate "e"
+    calculate "e" to do some work
     """
     k = 1.0
     e_value = 0.0
     iteration = 0
     # exit when exit_event is set
-    while iteration < 1000000 or iteration % 1000 != 0 or not exit_event.is_set():
+    while iteration % 1000 != 0 or not exit_event.is_set():
         e_value += 1.0 / k
         k *= iteration + 1
         iteration += 1
     return e_value
 ```
 
+Wrap the work in a `Process` class
 ```python
 from multiprocessing import Process, Event, SimpleQueue
 from typing import Tuple
@@ -62,27 +66,29 @@ from workers import calculate_e
 class CalculateE(Process):
     def __init__(self):
         self._result_queue = SimpleQueue()  # must use a multiprocessing mechanism to return the result
-        self._result = None  # result will be placed here  type: Union[Tuple[float, int, float], None]
-        self.exit_event = Event()  # tells the process to stop
+        self._result = None  # result will be placed here
+        self.exit_event = Event()  # will tell the process to stop
         super().__init__(name="calculate_e_process") # name the process
 
     def run(self):
-        returned_e_value = calculate_e(self.exit_event)  # calculate "e"
+        returned_e_value = calculate_e(self.exit_event)  # do the work (calculate "e")
         self._result_queue.put(returned_e_value)  # return the value in the Queue
 
-    def get(self) -> Tuple[float, int, float]:
+    def get(self) -> float:
         # get the value of the computation (with typing)
         if self._result is None:
             self._result = self._result_queue.get()  # will block until done, can only be used once
         return self._result
 ```
+
+main
 ```python
 import time
 from multiprocessing_talk import CalculateE
 
 e_process = CalculateE()
 e_process.start()
-time.sleep(3)  # do other stuff ...
+time.sleep(3)  # do other useful stuff ...
 e_process.exit_event.set()  # tell process to stop
 print(e_process.get())  # print e
 
@@ -90,8 +96,10 @@ print(e_process.get())  # print e
 ## Using `multiprocessing.Pool`
 
 - manages mapping execution to the underlying hardware (processor cores)
-- works well with a more functional programming style, including `map`
+- works well with a more functional programming style, including `map
 - manages return data
+- workers have to manage everything in the `Process`, including things like logging
+  - if workers don't use logging then keep them simple
 
 ### Code Snippet
 ```python
@@ -142,7 +150,6 @@ process (logging code only)
 from multiprocessing import Process
 from balsa import balsa_clone
 
-
 class CalculateE(Process):
     def __init__(self, name: str, logging_config: dict):
         self.name = name  # must be unique across processes
@@ -155,12 +162,19 @@ class CalculateE(Process):
         # do the work and use the logging module ...
 ```
 
+# Demo!
+
+[`python -m multiprocessing_talk`](https://github.com/jamesabel/python_multiprocessing_talk)
+
 # Common Pitfalls/Considerations
 
 - trying to access data "directly" across processes without using multiprocessing communication "channels"
   - several mechanisms exist to facilitate communication, but you should choose wisely
-  - communicate using "ctypes" or pickle-able data
-- use "real" cores vs. "HyperThread" (AKA Simultaneous Multi-Threading or SMT) processors 
+  - communicate using `ctypes` or `pickle`-able data
+- logging implementation that doesn't take multiprocessing into account
+- mismanaging compute resources (cores)
+- usually best to parallelize across "real" cores
+  - parallelize across "HyperThread" (AKA Simultaneous Multi-Threading or SMT) processors with care 
 
 # Design Decisions
 
@@ -168,3 +182,13 @@ class CalculateE(Process):
 - how to pass data
 - how to address process-specific aspects such as logging
 - consider first prototyping a design pattern appropriate for your application
+
+# Summary
+- Using `multiprocessing.Process` can be straightforward
+- Choosing the most appropriate design pattern is important
+- Understand limitations of multiprocessing
+- Use the facilities available that enable multiprocessing
+
+# Additional Resources
+[longtaskrunnin](https://github.com/jamesabel/longtaskrunnin) - similar techniques applied to a 
+PyQt application.
