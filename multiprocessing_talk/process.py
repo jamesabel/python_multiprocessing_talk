@@ -1,13 +1,14 @@
 import time
-from multiprocessing import Process, Event, Queue
+from multiprocessing import Process, Event, SimpleQueue
 from balsa import Balsa, get_logger, balsa_clone
 from pathlib import Path
+from typing import Tuple, Union
 
 from rich import print
 
-from workers import calculate_e, get_dir_info
+from workers import calculate_e, get_dir_info, DirInfo
 
-from multiprocessing_talk import application_name, author
+from multiprocessing_talk import application_name
 
 log = get_logger(application_name)
 
@@ -17,8 +18,8 @@ class CalculateE(Process):
 
         self.logging_config = logging_config
 
-        # can not merely return the result in .run() as a class variable
-        self.result = Queue()
+        self._result_queue = SimpleQueue()  # must use a multiprocessing mechanism to return the result
+        self._result = None  # type: Union[Tuple[float, int, float], None]
         self.exit_event = Event()
 
         # it's recommended to name the process
@@ -31,7 +32,13 @@ class CalculateE(Process):
 
         returned_e_value = calculate_e(self.exit_event)
         log.info("done calculating e!")
-        self.result.put(returned_e_value)  # return the value in the Queue
+        self._result_queue.put(returned_e_value)  # return the value in the Queue
+
+    def get(self) -> Tuple[float, int, float]:
+        # get the value of the computation (with typing)
+        if self._result is None:
+            self._result = self._result_queue.get()  # will block until done
+        return self._result
 
 
 class GetDirInfo(Process):
@@ -40,8 +47,8 @@ class GetDirInfo(Process):
         self.dir_path = dir_path
         self.logging_config = logging_config
 
-        # can not merely return the result in .run() as a class variable
-        self.result = Queue()
+        self._result_queue = SimpleQueue()  # must use a multiprocessing mechanism to return the result
+        self._result = None  # type: Union[DirInfo, None]
 
         # it's recommended to name the process
         super().__init__(name="get_dir_info_process")
@@ -53,7 +60,13 @@ class GetDirInfo(Process):
 
         dir_info = get_dir_info(self.dir_path)
         log.info(f"got info from {dir_info.file_count} files!")
-        self.result.put(dir_info)  # return the value in the Queue
+        self._result_queue.put(dir_info)  # return the value in the Queue
+
+    def get(self) -> DirInfo:
+        # get the value of the computation (with typing)
+        if self._result is None:
+            self._result = self._result_queue.get()  # will block until done
+        return self._result
 
 
 def main_process(balsa: Balsa):
@@ -67,28 +80,19 @@ def main_process(balsa: Balsa):
     log.info(f"starting {application_name}")
     e_process = CalculateE(balsa_config)  # pass in log config
     e_process.start()  # calculates e
-    program_files = Path(Path(".").absolute().anchor, "Program Files")
-    dir_info_process = GetDirInfo(Path(program_files, "Python310"), balsa_config)
+    dir_info_process = GetDirInfo(Path(Path(".").absolute().anchor, "Program Files", "Python310"), balsa_config)
     dir_info_process.start()
 
-    # give the user some visual feedback that something is going on
-    print('countdown to "e" begins ...')
-    for count_down in range(4, -1, -1):
-        print(count_down)
-        time.sleep(1)
-
     # request exit from "e" process and wait for dir info
-    e_process.exit_event.set()
-    e_process.join()
     while dir_info_process.is_alive():
-        print(f"waiting on {dir_info_process.name} {time.time() - start} ...")
-        dir_info_process.join(1)
+        dir_info_process.join(2)
+        print(f"waiting on dir_info_result for {time.time() - start} seconds ...")
 
     # get the results
-    e = e_process.result.get(timeout=1)  # only works once
-    print(f"{e=}")
-    dir_info = dir_info_process.result.get()
-    print(f"{dir_info=}")
-    print(f"total time: {time.time() - start} seconds")
+    print(dir_info_process.get())
+    e_process.exit_event.set()
+    e_value, e_iterations, e_duration = e_process.get()
+    print(f"calculated {e_value=} for {e_iterations:,} iterations in {e_duration} seconds")
 
+    print(f"total time: {time.time() - start} seconds")
     print()

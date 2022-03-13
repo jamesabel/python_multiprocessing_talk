@@ -7,7 +7,7 @@ from multiprocessing import current_process
 
 from balsa import balsa_clone, get_logger
 
-from multiprocessing_talk import application_name
+application_name = __name__
 
 log = get_logger(application_name)
 
