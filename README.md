@@ -166,6 +166,10 @@ class CalculateE(Process):
 
 [`python -m multiprocessing_talk`](https://github.com/jamesabel/python_multiprocessing_talk)
 
+This demo simultaneously calculates information about a directory (in this case the Python directory) while 
+also calculating "e". The directory work takes about 5-6 seconds, and the "e" calculation is done in parallel.
+Also in parallel, status messages are printed to the console.
+
 # Common Pitfalls/Considerations
 
 - trying to access data "directly" across processes without using multiprocessing communication "channels"
