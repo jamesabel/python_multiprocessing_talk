@@ -95,7 +95,8 @@ def main_process(balsa: Balsa):
     print(dir_info_process.get())
     e_process.exit_event.set()
     e_value, e_iterations, e_duration = e_process.get()
-    print(f"calculated {e_value=} for {e_iterations:,} iterations in {e_duration} seconds")
+    print(f"\n"
+          f"calculated {e_value=} for {e_iterations:,} iterations in {e_duration} seconds")
 
     print(f"total time: {time.time() - start} seconds")
     print()
