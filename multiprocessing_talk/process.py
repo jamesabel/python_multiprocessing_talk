@@ -80,7 +80,10 @@ def main_process(balsa: Balsa):
     log.info(f"starting {application_name}")
     e_process = CalculateE(balsa_config)  # pass in log config
     e_process.start()  # calculates e
-    dir_info_process = GetDirInfo(Path(Path(".").absolute().anchor, "Program Files", "Python310"), balsa_config)
+    # replace hardcoded path so code works when people clone repo
+    # dir_info_process = GetDirInfo(Path(Path(".").absolute().anchor, "Program Files", "Python310"), balsa_config)
+    dir_info_process = GetDirInfo(
+        Path.cwd(), balsa_config)
     dir_info_process.start()
 
     # request exit from "e" process and wait for dir info
