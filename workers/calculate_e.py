@@ -25,7 +25,7 @@ def calculate_e(exit_event: Event, balsa_config: dict = None) -> Tuple[float, in
         # we're called from process.Pool() so we have to do things that are otherwise in .run()
         balsa = balsa_clone(balsa_config, "calculate_e_process")
         balsa.init_logger()
-        current_process().name = 'e_process'
+        current_process().name = "e_process"
 
     k = 1.0
     e_value = 0.0

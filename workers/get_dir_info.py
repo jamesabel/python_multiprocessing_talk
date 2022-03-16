@@ -35,7 +35,7 @@ def get_dir_info(directory_path: Path, balsa_config: dict = None) -> DirInfo:
         # we're called from process.Pool() so we have to do things that are otherwise in .run()
         balsa = balsa_clone(balsa_config, "get_dir_info_process")
         balsa.init_logger()
-        current_process().name = 'get_dir_info_process'
+        current_process().name = "get_dir_info_process"
 
     dir_info = DirInfo(directory_path)
 
