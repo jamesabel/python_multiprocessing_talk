@@ -30,7 +30,9 @@ def main_pool(balsa: Balsa):
 
         # run the workers using .apply_async()
         e_process = pool.apply_async(calculate_e, args=(e_exit_event, balsa_config))
-        dir_path = Path(Path(".").absolute().anchor, "Program Files", "Python310")
+        # replace hardcoded path so code works when people clone repo
+        # dir_path = Path(Path(".").absolute().anchor, "Program Files", "Python310")
+        dir_path = Path.cwd() / "venv"
         dir_info_result = pool.apply_async(
             get_dir_info,
             args=(dir_path, balsa_config),
