@@ -202,10 +202,12 @@ Also in parallel, status messages are printed to the console.
 - understand limitations of multiprocessing
 - use the facilities available that enable multiprocessing
   - `Queue`, `Event`, etc.
+- code and presentation: 
+[https://github.com/jamesabel/python_multiprocessing_talk](https://github.com/jamesabel/python_multiprocessing_talk)
 
 # Thank you!
 
-Thanks to Christopher Brousseau for reviewing this talk and code!
+Thanks to Chris Brousseau for reviewing this talk and code!
 
 # Additional Resources
 [longtaskrunnin](https://github.com/jamesabel/longtaskrunnin) - similar techniques applied to a 
