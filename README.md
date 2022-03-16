@@ -180,7 +180,11 @@ Also in parallel, status messages are printed to the console.
   - mapping a program on to multiple processes that isn't actually parallelizable
   - too much start/stop or communication overhead
 - usually best to parallelize across "real" cores
-  - parallelize across "HyperThread" (AKA Simultaneous Multi-Threading or SMT) processors with care 
+  - parallelize across "HyperThread" (AKA Simultaneous Multi-Threading or SMT) processors with care
+- ensure code runs as a single process
+  - often easier to debug as a single-process
+  - call `.run()` directly (instead of `.start()`)
+- use a process-aware IDE, especially for debug
 
 # Design Decisions
 
@@ -190,6 +194,7 @@ Also in parallel, status messages are printed to the console.
 - consider first prototyping a design pattern appropriate for your application
 
 # Summary
+
 - parallel processing has historically been considered difficult, but it doesn't have to be
 - using `multiprocessing.Process` and `multiprocessing.Pool` can be straightforward
 - choosing the most appropriate design pattern is important
@@ -198,10 +203,10 @@ Also in parallel, status messages are printed to the console.
 - use the facilities available that enable multiprocessing
   - `Queue`, `Event`, etc.
 
-# Additional Resources
-[longtaskrunnin](https://github.com/jamesabel/longtaskrunnin) - similar techniques applied to a 
-PyQt application.
-
 # Thank you!
 
 Thanks to Christopher Brousseau for reviewing this talk and code!
+
+# Additional Resources
+[longtaskrunnin](https://github.com/jamesabel/longtaskrunnin) - similar techniques applied to a 
+PyQt application.
