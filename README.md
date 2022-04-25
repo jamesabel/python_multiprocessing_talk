@@ -184,7 +184,9 @@ Also in parallel, status messages are printed to the console.
 - ensure code runs as a single process
   - often easier to debug as a single-process
   - call `.run()` directly (instead of `.start()`)
-- use a process-aware IDE, especially for debug
+- use a process-aware IDE (e.g. PyCharm), especially for debug. Running a "debug" session in the IDE  
+  can sometimes avoid a python (e.g. CPython interpreter) crash and take you to the line of code 
+  with the issue.
 
 # Design Decisions
 
