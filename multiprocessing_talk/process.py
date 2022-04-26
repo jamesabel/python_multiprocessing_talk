@@ -50,7 +50,7 @@ class GetDirInfo(Process):
         self._result_queue = SimpleQueue()  # must use a multiprocessing mechanism to return the result
         self._result = None  # type: Union[DirInfo, None]
 
-        # it's recommended to name the process
+        # naming the process is recommended
         super().__init__(name="get_dir_info_process")
 
     def run(self):
@@ -80,19 +80,25 @@ def main_process(balsa: Balsa):
     log.info(f"starting {application_name}")
     e_process = CalculateE(balsa_config)  # pass in log config
     e_process.start()  # calculates e
-    dir_info_process = GetDirInfo(Path(Path(".").absolute().anchor, "Program Files", "Python310"), balsa_config)
-    dir_info_process.start()
 
-    # request exit from "e" process and wait for dir info
-    while dir_info_process.is_alive():
-        dir_info_process.join(2)
-        print(f"waiting on dir_info_result for {time.time() - start} seconds ...")
+    dir_path = Path(Path(".").absolute().anchor, "Program Files", "Python310")  # just point to some large set of files
 
-    # get the results
-    print(dir_info_process.get())
-    e_process.exit_event.set()
-    e_value, e_iterations, e_duration = e_process.get()
-    print(f"calculated {e_value=} for {e_iterations:,} iterations in {e_duration} seconds")
+    if dir_path.exists():
+        dir_info_process = GetDirInfo(dir_path, balsa_config)
+        dir_info_process.start()
+
+        # request exit from "e" process and wait for dir info
+        while dir_info_process.is_alive():
+            dir_info_process.join(2)
+            print(f"waiting on dir_info_result for {time.time() - start} seconds ...")
+
+        # get the results
+        print(dir_info_process.get())
+        e_process.exit_event.set()
+        e_value, e_iterations, e_duration = e_process.get()
+        print(f"calculated {e_value=} for {e_iterations:,} iterations in {e_duration} seconds")
+    else:
+        print(f'{dir_path} does not exist - please modify "dir_path" this example to point to a valid directory')
 
     print(f"total time: {time.time() - start} seconds")
     print()

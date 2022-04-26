@@ -30,24 +30,29 @@ def main_pool(balsa: Balsa):
 
         # run the workers using .apply_async()
         e_process = pool.apply_async(calculate_e, args=(e_exit_event, balsa_config))
-        dir_path = Path(Path(".").absolute().anchor, "Program Files", "Python310")
-        dir_info_result = pool.apply_async(
-            get_dir_info,
-            args=(dir_path, balsa_config),
-        )
 
-        # get the results while displaying a status message
-        result = None
-        while result is None:
-            try:
-                result = dir_info_result.get(timeout=2)
-            except context.TimeoutError:
-                print(f"waiting on dir_info_result for {time.time() - start} seconds ...")
-        print(result)
+        dir_path = Path(Path(".").absolute().anchor, "Program Files", "Python310")  # just point to some large set of files
 
-        e_exit_event.set()  # tell calculate_e to stop
-        e_value, e_iterations, e_duration = e_process.get()
-        print(f"calculated {e_value=} for {e_iterations:,} iterations in {e_duration} seconds")
+        if dir_path.exists():
+            dir_info_result = pool.apply_async(
+                get_dir_info,
+                args=(dir_path, balsa_config),
+            )
+
+            # get the results while displaying a status message
+            result = None
+            while result is None:
+                try:
+                    result = dir_info_result.get(timeout=2)
+                except context.TimeoutError:
+                    print(f"waiting on dir_info_result for {time.time() - start} seconds ...")
+            print(result)
+
+            e_exit_event.set()  # tell calculate_e to stop
+            e_value, e_iterations, e_duration = e_process.get()
+            print(f"calculated {e_value=} for {e_iterations:,} iterations in {e_duration} seconds")
+        else:
+            print(f'{dir_path} does not exist - please modify "dir_path" this example to point to a valid directory')
 
     print(f"total time: {time.time() - start} seconds")
     print()
